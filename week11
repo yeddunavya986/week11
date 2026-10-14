@@ -1,0 +1,152 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "RIdY7Viu8NY5",
+        "outputId": "97975eef-12ff-425c-d5e3-f6854b79571f"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/137.5 kB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m\r\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m137.5/137.5 kB\u001b[0m \u001b[31m3.9 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25h"
+          ]
+        }
+      ],
+      "source": [
+        "!pip install -q langchain langchain-core langchain-groq groq"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from google.colab import userdata\n",
+        "from langchain_core.prompts import ChatPromptTemplate\n",
+        "from langchain_core.output_parsers import StrOutputParser\n",
+        "from langchain_groq import ChatGroq\n"
+      ],
+      "metadata": {
+        "id": "3YO7czFz8mtn"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "api_key = userdata.get(\"GROQ_API_KEY\")"
+      ],
+      "metadata": {
+        "id": "p1UoEbo08tA9"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "llm = ChatGroq(\n",
+        "    groq_api_key=api_key,\n",
+        "    model_name=\"openai/gpt-oss-20b\"\n",
+        ")\n",
+        "\n",
+        "prompt = ChatPromptTemplate.from_template(\n",
+        "    \"Summarize the following text in simple English:\\n\\n{text}\"\n",
+        ")\n",
+        "\n",
+        "chain = prompt | llm | StrOutputParser()\n",
+        "\n",
+        "result = chain.invoke({\"text\": text})\n",
+        "\n",
+        "print(result)\n"
+      ],
+      "metadata": {
+        "id": "OnWixvIgBStK",
+        "outputId": "2cb81ec0-ade1-4af1-b622-a5e6abaf64ff",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        }
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Artificial Intelligence, or AI, lets computers do things that usually need people’s brains. It’s used in places like hospitals, schools, banks, and cars. AI makes things more accurate, speeds up work, and takes care of boring, repetitive tasks.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "text = \"\"\"\n",
+        "Artificial Intelligence (AI) is a technology that allows computers\n",
+        "to perform tasks that normally require human intelligence.\n",
+        "It is used in healthcare, education, banking,\n",
+        "transportation, and many other fields.\n",
+        "AI helps improve accuracy, save time,\n",
+        "and automate repetitive work.\n",
+        "\"\"\"\n",
+        "\n",
+        "\n",
+        "# ==========================================\n",
+        "# Step 8: Run the chain\n",
+        "# ==========================================\n",
+        "\n",
+        "result = chain.invoke({\"text\": text})\n",
+        "\n",
+        "\n",
+        "# ==========================================\n",
+        "# Step 9: Display output\n",
+        "# ==========================================\n",
+        "\n",
+        "print(\"========== Summary ==========\\n\")\n",
+        "print(result)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "y7iBU-8TA4Nr",
+        "outputId": "9f6b8bf8-d056-4ac4-c39d-fecfd79f6c6f"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "========== Summary ==========\n",
+            "\n",
+            "AI lets computers do things that usually need human thinking.  \n",
+            "It’s used in many areas—healthcare, schools, banks, transport, and more.  \n",
+            "AI makes tasks more accurate, faster, and can handle repetitive jobs on its own.\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
