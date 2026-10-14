@@ -1,0 +1,269 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "RvqxUoFS7TKj"
+      },
+      "outputs": [],
+      "source": [
+        "!pip install groq transformers -q\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from google.colab import userdata\n",
+        "from groq import Groq\n"
+      ],
+      "metadata": {
+        "id": "VNOfCL4ZFUz9"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "api_key = userdata.get(\"GROQ_API_KEY\")\n",
+        "client = Groq(api_key=api_key)\n"
+      ],
+      "metadata": {
+        "id": "IyRsVr30FYj9"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# ------------------------------------\n",
+        "# Logic Problem\n",
+        "# ------------------------------------\n",
+        "\n",
+        "problem = \"\"\"\n",
+        "A farmer has 17 sheep.\n",
+        "All but 9 die.\n",
+        "How many sheep are left?\n",
+        "\"\"\"\n",
+        "\n",
+        "# ------------------------------------\n",
+        "# 1. Direct Answer (Baseline)\n",
+        "# ------------------------------------\n",
+        "\n",
+        "baseline_prompt = f\"\"\"\n",
+        "Answer the following question.\n",
+        "\n",
+        "{problem}\n",
+        "\"\"\"\n",
+        "\n",
+        "baseline = client.chat.completions.create(\n",
+        "    model=\"openai/gpt-oss-120b\",\n",
+        "    messages=[{\"role\": \"user\", \"content\": baseline_prompt}]\n",
+        ")\n",
+        "\n",
+        "# ------------------------------------\n",
+        "# 2. Chain-of-Thought Prompt\n",
+        "# ------------------------------------\n",
+        "\n",
+        "cot_prompt = f\"\"\"\n",
+        "Solve the following problem.\n",
+        "\n",
+        "Let's think step by step and give a brief explanation before the final answer.\n",
+        "\n",
+        "{problem}\n",
+        "\"\"\"\n",
+        "\n",
+        "cot = client.chat.completions.create(\n",
+        "    model=\"openai/gpt-oss-120b\",\n",
+        "    messages=[{\"role\": \"user\", \"content\": cot_prompt}]\n",
+        ")\n",
+        "\n",
+        "# ------------------------------------\n",
+        "# 3. Task Decomposition\n",
+        "# ------------------------------------\n",
+        "\n",
+        "q1 = \"\"\"\n",
+        "Question 1:\n",
+        "How many sheep did the farmer have at the beginning?\n",
+        "\"\"\"\n",
+        "\n",
+        "q2 = \"\"\"\n",
+        "Question 2:\n",
+        "What does 'All but 9 die' mean?\n",
+        "\"\"\"\n",
+        "\n",
+        "q3 = \"\"\"\n",
+        "Question 3:\n",
+        "Based on the above answer, how many sheep are left?\n",
+        "\"\"\"\n",
+        "\n",
+        "ans1 = client.chat.completions.create(\n",
+        "    model=\"openai/gpt-oss-120b\",\n",
+        "    messages=[{\"role\": \"user\", \"content\": q1}]\n",
+        ")\n",
+        "\n",
+        "ans2 = client.chat.completions.create(\n",
+        "    model=\"openai/gpt-oss-120b\",\n",
+        "    messages=[{\"role\": \"user\", \"content\": q2}]\n",
+        ")\n",
+        "\n",
+        "ans3 = client.chat.completions.create(\n",
+        "    model=\"openai/gpt-oss-120b\",\n",
+        "    messages=[{\"role\": \"user\", \"content\": q3}]\n",
+        ")\n",
+        "\n",
+        "# ------------------------------------\n",
+        "# Display Results\n",
+        "# ------------------------------------\n",
+        "\n",
+        "print(\"========== Problem ==========\")\n",
+        "print(problem)\n",
+        "\n",
+        "print(\"\\n========== Direct Answer ==========\")\n",
+        "print(baseline.choices[0].message.content)\n",
+        "\n",
+        "print(\"\\n========== Chain-of-Thought ==========\")\n",
+        "print(cot.choices[0].message.content)\n",
+        "\n",
+        "print(\"\\n========== Task Decomposition ==========\")\n",
+        "\n",
+        "print(\"\\nQuestion 1:\")\n",
+        "print(ans1.choices[0].message.content)\n",
+        "\n",
+        "print(\"\\nQuestion 2:\")\n",
+        "print(ans2.choices[0].message.content)\n",
+        "\n",
+        "print(\"\\nQuestion 3:\")\n",
+        "print(ans3.choices[0].message.content)\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "AgsNAfSnFdXd",
+        "outputId": "2db0c03d-72e2-413e-dade-cc97d138c57a"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "========== Problem ==========\n",
+            "\n",
+            "A farmer has 17 sheep.\n",
+            "All but 9 die.\n",
+            "How many sheep are left?\n",
+            "\n",
+            "\n",
+            "========== Direct Answer ==========\n",
+            "9\n",
+            "\n",
+            "========== Chain-of-Thought ==========\n",
+            "**Step‑by‑step reasoning**\n",
+            "\n",
+            "1. The farmer initially has 17 sheep.  \n",
+            "2. The statement “all but 9 die” means that every sheep except nine of them die.  \n",
+            "3. Therefore the nine sheep that are *not* part of “all but” survive.  \n",
+            "\n",
+            "**Answer:** 9 sheep are left.\n",
+            "\n",
+            "========== Task Decomposition ==========\n",
+            "\n",
+            "Question 1:\n",
+            "I’m happy to help, but I’ll need a bit more context to answer that question. Could you provide the full problem statement or any additional details (e.g., what happens to the sheep later, any numbers given, etc.)? With the complete information I can determine how many sheep the farmer started with.\n",
+            "\n",
+            "Question 2:\n",
+            "**Short answer:**  \n",
+            "It means that everyone *except* nine people (or nine things) die – those nine are the only survivors.\n",
+            "\n",
+            "**Why the wording sounds odd**\n",
+            "\n",
+            "The phrase “All but 9 die” is a concise way of saying “All of them die **except** nine of them.”  \n",
+            "In English, *all but* is a set‑theoretic expression meaning “everything except.”  \n",
+            "\n",
+            "- **All** = the whole group (people, animals, objects, etc.)  \n",
+            "- **but 9** = remove nine members from that group  \n",
+            "- **die** = the fate that befalls the remaining members  \n",
+            "\n",
+            "So the logical structure is:\n",
+            "\n",
+            "```\n",
+            "Group = {everyone}\n",
+            "Survivors = 9 members of the group\n",
+            "Result = Everyone else in the group dies.\n",
+            "```\n",
+            "\n",
+            "**Example in context**\n",
+            "\n",
+            "If a story says, “During the plague, all but 9 die,” it tells the reader that the plague was devastating, wiping out the entire population **except** for nine individuals who survive.\n",
+            "\n",
+            "**Possible uses**\n",
+            "\n",
+            "- **Riddles / puzzles:** The phrase can be a clue. For instance, “All but 9 die” might hint that you need to find the nine letters or numbers that *don’t* become the word “die” when transformed in some way.\n",
+            "- **Statistics / reports:** A concise way to report mortality data (e.g., “In the experiment, all but 9 mice died” → 9 mice survived).\n",
+            "- **Literary/poetic effect:** It emphasizes the tragedy by highlighting how few escape death.\n",
+            "\n",
+            "**Bottom line:** “All but 9 die” = “Everyone dies **except** nine.”\n",
+            "\n",
+            "Question 3:\n",
+            "I’m sorry—I don’t have the information from the “above answer” you’re referring to. Could you please provide the previous answer or the details of the problem so I can determine how many sheep are left?\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "17d6af9c",
+        "outputId": "97f24e53-5919-49e1-9421-f809d5cc0bf9"
+      },
+      "source": [
+        "models = client.models.list()\n",
+        "print(\"Available Groq Models:\")\n",
+        "for model in models.data:\n",
+        "    print(f\"- {model.id}\")"
+      ],
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Available Groq Models:\n",
+            "- whisper-large-v3-turbo\n",
+            "- meta-llama/llama-prompt-guard-2-86m\n",
+            "- whisper-large-v3\n",
+            "- allam-2-7b\n",
+            "- canopylabs/orpheus-arabic-saudi\n",
+            "- openai/gpt-oss-safeguard-20b\n",
+            "- openai/gpt-oss-120b\n",
+            "- canopylabs/orpheus-v1-english\n",
+            "- meta-llama/llama-prompt-guard-2-22m\n",
+            "- qwen/qwen3.8-27b\n",
+            "- openai/gpt-oss-20b\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
